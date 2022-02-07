@@ -2,7 +2,6 @@
 
 namespace Viktorprogger\DDD\Config;
 
-use Composer\Composer;
 use ErrorException;
 use RuntimeException;
 use Yiisoft\Arrays\ArrayHelper;
@@ -10,25 +9,17 @@ use Yiisoft\Arrays\ArrayHelper;
 
 final class ConfigurationYiiConfig
 {
-    /** @var string[][]|string[] */
-    private array $rootPackageConfig;
     private array $moduleConfigurations;
     private array $building = [];
     private array $params = [];
     private array $cacheKeys = [];
 
-    public function __construct(Composer $composer, private string $paramsGroupName = 'params', array ...$configurations)
-    {
+    public function __construct(
+        private PackageConfiguration $packageConfig,
+        private string $paramsGroupName = 'params',
+        array ...$configurations
+    ) {
         $this->moduleConfigurations = $configurations;
-
-        /** @psalm-suppress MixedAssignment */
-        $this->rootPackageConfig = $composer->getPackage()->getExtra()['config-plugin'] ?? [];
-
-        /** @var string|string[] $value */
-        foreach ($this->rootPackageConfig as &$value) {
-            $value = (array) $value;
-        }
-        unset($value);
     }
 
     /**
@@ -42,7 +33,7 @@ final class ConfigurationYiiConfig
      */
     public function getModuleConfiguration(string $group): array
     {
-        if (isset($this->rootPackageConfig[$group])) {
+        if ($this->packageConfig->getGroupFiles($group) !== []) {
             foreach ($this->moduleConfigurations as &$configuration) {
                 if ($group !== $this->paramsGroupName) {
                     $this->params[$configuration['id']] = $this->getModuleDefinitions($configuration, $this->paramsGroupName);
@@ -58,17 +49,14 @@ final class ConfigurationYiiConfig
     private function getModuleDefinitions(array $configuration, string $group): array
     {
         if (isset($this->building[$configuration['id']][$group])) {
-            throw new RuntimeException("$group is already building"); // FIXME make a more concrete exception
+            throw new RuntimeException("$group is already building"); // FIXME make more concrete exception
         }
         $this->building[$configuration['id']][$group] = true;
         $result = [];
 
-        /** @var string[] $fileList */
-        $fileList = $this->rootPackageConfig[$group];
-        foreach ($fileList as $item) {
-            if ($this->isVariable($item)) {
-                $parentGroup = substr($item, 1);
-                $definitions = $this->getModuleDefinitions($configuration, $parentGroup);
+        foreach ($this->packageConfig->getGroupFiles($group) as $item) {
+            if ($item->isVariable()) {
+                $definitions = $this->getModuleDefinitions($configuration, $item->getName());
 
                 $result = $this->merge(
                     $result,
@@ -78,30 +66,21 @@ final class ConfigurationYiiConfig
                     false,
                 );
             } else {
-                if ($this->isOptional($item)) {
-                    $item = substr($item, 1);
-                }
+                if (is_file($item->getFilePath())) {
+                    $definitions = $this->getFileDefinitions(
+                        $item->getFilePath(),
+                        isset($this->building[$configuration['id']][$this->paramsGroupName])
+                            ? []
+                            : $this->params[$configuration['id']]
+                    );
 
-                $filePath = "{$configuration['config_dir']}/$item";
-                $files = $this->containsWildcard($filePath) ? glob($filePath) : [$filePath];
-
-                foreach ($files as $file) {
-                    if (is_file($file)) {
-                        $definitions = $this->getFileDefinitions(
-                            $file,
-                            isset($this->building[$configuration['id']][$this->paramsGroupName])
-                                ? []
-                                : $this->params[$configuration['id']]
-                        );
-
-                        $result = $this->merge(
-                            $result,
-                            $definitions,
-                            [],
-                            false,
-                            false,
-                        );
-                    }
+                    $result = $this->merge(
+                        $result,
+                        $definitions,
+                        [],
+                        false,
+                        false,
+                    );
                 }
             }
         }
@@ -109,21 +88,6 @@ final class ConfigurationYiiConfig
         unset($this->building[$configuration['id']][$group]);
 
         return $result;
-    }
-
-    private function containsWildcard(string $file): bool
-    {
-        return strpos($file, '*') !== false;
-    }
-
-    private function isOptional(string $file): bool
-    {
-        return strpos($file, '?') === 0;
-    }
-
-    private function isVariable(string $file): bool
-    {
-        return strpos($file, '$') === 0;
     }
 
     private function merge(
