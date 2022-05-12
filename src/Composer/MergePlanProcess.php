@@ -79,6 +79,7 @@ final class MergePlanProcess
                         Options::ROOT_PACKAGE_NAME,
                         $group,
                         $moduleConfig['module'],
+                        $environment,
                     );
                 }
             }

@@ -73,97 +73,94 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function assertMergePlan(array $environments = []): void
     {
-        $this->assertSame(
-            require $this->getTempPath(Options::MERGE_PLAN_FILENAME),
-            array_merge(
-                [
-                    Options::DEFAULT_ENVIRONMENT => [
-                        'vendor' => [
-                            'params' => [
-                                'test/a' => [
-                                    'config/params.php',
-                                ],
-                                'test/c' => [
-                                    'config/params.php',
-                                ],
-                                'test/custom-source' => [
-                                    'custom-dir/params.php',
-                                ],
-                            ],
-                            'web' => [
-                                'test/a' => [
-                                    'config/web.php',
-                                ],
-                                'test/ba' => [
-                                    'config/web.php',
-                                ],
-                                'test/c' => [
-                                    'config/web.php',
-                                ],
-                                'test/custom-source' => [
-                                    'custom-dir/web.php',
-                                ],
-                                'test/d-dev-c' => [
-                                    'config/web.php',
-                                ],
-                            ],
-                            'common' => [
-                                'test/custom-source' => [
-                                    'custom-dir/common/a.php',
-                                    'custom-dir/common/b.php',
-                                ],
-                            ],
-                            'events' => [
-                                'test/custom-source' => [
-                                    'custom-dir/events.php',
-                                ],
-                            ],
-                            'events-web' => [
-                                'test/custom-source' => [
-                                    '$events',
-                                    'custom-dir/events-web.php',
-                                ],
-                            ],
+        $default = [
+            Options::DEFAULT_ENVIRONMENT => [
+                'vendor' => [
+                    'params' => [
+                        'test/a' => [
+                            'config/params.php',
                         ],
-                        Options::VENDOR_OVERRIDE_PACKAGE_NAME => [
-                            'params' => [
-                                'test/over' => [
-                                    'test/over/config/params.php',
-                                ],
-                            ],
-                            'web' => [
-                                'test/over' => [
-                                    'test/over/config/web.php',
-                                ],
-                            ],
+                        'test/c' => [
+                            'config/params.php',
                         ],
-                        'main' => [
-                            'empty' => [
-                                Options::ROOT_PACKAGE_NAME => [],
-                            ],
-                            'common' => [
-                                Options::ROOT_PACKAGE_NAME => [
-                                    'common/*.php',
-                                ],
-                            ],
-                            'params' => [
-                                Options::ROOT_PACKAGE_NAME => [
-                                    'params.php',
-                                    '?params-local.php',
-                                ],
-                            ],
-                            'web' => [
-                                Options::ROOT_PACKAGE_NAME => [
-                                    '$common',
-                                    'web.php',
-                                ],
-                            ],
+                        'test/custom-source' => [
+                            'custom-dir/params.php',
+                        ],
+                    ],
+                    'web' => [
+                        'test/a' => [
+                            'config/web.php',
+                        ],
+                        'test/ba' => [
+                            'config/web.php',
+                        ],
+                        'test/c' => [
+                            'config/web.php',
+                        ],
+                        'test/custom-source' => [
+                            'custom-dir/web.php',
+                        ],
+                        'test/d-dev-c' => [
+                            'config/web.php',
+                        ],
+                    ],
+                    'common' => [
+                        'test/custom-source' => [
+                            'custom-dir/common/a.php',
+                            'custom-dir/common/b.php',
+                        ],
+                    ],
+                    'events' => [
+                        'test/custom-source' => [
+                            'custom-dir/events.php',
+                        ],
+                    ],
+                    'events-web' => [
+                        'test/custom-source' => [
+                            '$events',
+                            'custom-dir/events-web.php',
                         ],
                     ],
                 ],
-                $environments
-            ),
-        );
+                Options::VENDOR_OVERRIDE_PACKAGE_NAME => [
+                    'params' => [
+                        'test/over' => [
+                            'test/over/config/params.php',
+                        ],
+                    ],
+                    'web' => [
+                        'test/over' => [
+                            'test/over/config/web.php',
+                        ],
+                    ],
+                ],
+                'main' => [
+                    'empty' => [
+                        Options::ROOT_PACKAGE_NAME => [],
+                    ],
+                    'common' => [
+                        Options::ROOT_PACKAGE_NAME => [
+                            'common/*.php',
+                        ],
+                    ],
+                    'params' => [
+                        Options::ROOT_PACKAGE_NAME => [
+                            'params.php',
+                            '?params-local.php',
+                        ],
+                    ],
+                    'web' => [
+                        Options::ROOT_PACKAGE_NAME => [
+                            '$common',
+                            'web.php',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = array_merge($default, $environments);
+
+        $this->assertSame($expected, require $this->getTempPath(Options::MERGE_PLAN_FILENAME));
     }
 
     protected function getInaccessibleProperty(object $object, string $propertyName)
