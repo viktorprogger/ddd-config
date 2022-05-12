@@ -30,7 +30,7 @@ final class Options
     private array $modules;
     private string $moduleRoot;
 
-    public function __construct(array $extra)
+    public function __construct(array $extra, bool $root = false)
     {
         if (!isset($extra['config-plugin-options']) || !is_array($extra['config-plugin-options'])) {
             return;
@@ -38,11 +38,19 @@ final class Options
 
         $options = $extra['config-plugin-options'];
 
-        $this->modules = $options['modules']
-            ?? throw new InvalidArgumentException('Module list must be set in the "config-plugin-options" section of the composer.json');
-        $this->moduleRoot = $options['module-root'] ?? throw new InvalidArgumentException('Module root name must be set in the "config-plugin-options" section of the composer.json');
-        if (!isset($this->modules[$this->moduleRoot])) {
-            throw new InvalidArgumentException("Root module \"$this->moduleRoot\" does not present in configuration");
+        if ($root) {
+            $this->modules = $options['modules']
+                ?? throw new InvalidArgumentException(
+                    'Module list must be set in the "config-plugin-options" section of the composer.json'
+                );
+            $this->moduleRoot = $options['module-root'] ?? throw new InvalidArgumentException(
+                    'Module root name must be set in the "config-plugin-options" section of the composer.json'
+                );
+            if (!isset($this->modules[$this->moduleRoot])) {
+                throw new InvalidArgumentException(
+                    "Root module \"$this->moduleRoot\" does not present in configuration"
+                );
+            }
         }
 
         if (isset($options['build-merge-plan'])) {
@@ -65,6 +73,7 @@ final class Options
 
     public function getModuleRootName(): string
     {
+        return $this->moduleRoot;
     }
 
     public static function isOptional(string $file): bool

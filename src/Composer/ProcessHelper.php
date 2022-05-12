@@ -10,6 +10,10 @@ use Composer\Package\CompletePackage;
 use Composer\Package\PackageInterface;
 use Viktorprogger\DDD\Config\Options;
 
+use Yiisoft\Config\ConfigPaths;
+
+use Yiisoft\Strings\WildcardPattern;
+
 use function dirname;
 use function is_string;
 use function realpath;
@@ -48,7 +52,7 @@ final class ProcessHelper
         ;
 
         $this->composer = $composer;
-        $this->rootPackageOptions = new Options($this->rootPackageExtra);
+        $this->rootPackageOptions = new Options($this->rootPackageExtra, true);
         $this->paths = new ConfigPaths($rootPath, $this->rootPackageOptions->sourceDirectory());
         $this->packages = (new PackagesListBuilder($this->composer))->build();
     }

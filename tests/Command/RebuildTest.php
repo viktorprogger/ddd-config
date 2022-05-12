@@ -1,9 +1,10 @@
 <?php
 
-namespace Viktorprogger\DDD\Config\Tests;
+namespace Viktorprogger\DDD\Config\Tests\Command;
 
 use Composer\Composer;
 use Composer\Config;
+use Composer\Console\Application;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\Installer\InstallationManager;
 use Composer\IO\IOInterface;
@@ -41,6 +42,7 @@ class RebuildTest extends TestCase
     {
         $command = new RebuildCommand();
         $command->setComposer($this->createComposerMock());
+        $command->setApplication($this->createMock(Application::class));
         $command->setIO($this->getMockBuilder(IOInterface::class)->getMockForAbstractClass());
         (new CommandTester($command))->execute([]);
     }
@@ -62,6 +64,10 @@ class RebuildTest extends TestCase
                     'source-directory' => 'config',
                     'vendor-override-layer' => $vendorOverridePackage ?? 'test/over',
                     'build-merge-plan' => $buildMergePlan,
+                    'modules' => [
+                        'main' => ['path' => ''],
+                    ],
+                    'module-root' => 'main',
                 ],
                 'config-plugin' => [
                     'empty' => [],

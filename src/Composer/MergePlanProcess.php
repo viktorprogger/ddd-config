@@ -74,7 +74,7 @@ final class MergePlanProcess
                                 '/',
                                 array_filter([$moduleConfig['path'], $moduleConfig['configDirectory'], $file])
                             ),
-                            $files
+                            (array) $files
                         ),
                         Options::ROOT_PACKAGE_NAME,
                         $group,
@@ -205,7 +205,6 @@ final class MergePlanProcess
 
             if (isset($config['path'])) {
                 $configNew[] = [
-                    'package' => Options::ROOT_PACKAGE_NAME,
                     'module' => $title,
                     'path' => $config['path'],
                     'configDirectory' => $config['config-directory'] ?? null,
